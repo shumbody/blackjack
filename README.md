@@ -1,0 +1,4 @@
+blackjack
+=========
+
+A blackjack simulator
