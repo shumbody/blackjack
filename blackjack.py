@@ -2,94 +2,39 @@ import math
 import random
 
 class Card:
-  card_types = {
-            "ACE": 1,
-            "TWO": 2,
-            "THREE": 3,
-             "FOUR":4,
-            "FIVE": 5,
-            "SIX": 6,
-            "SEVEN": 7,
-            "EIGHT": 8,
-            "NINE": 9,
-            "TEN": 10
-  }
-  def __init__(self, card_type):
-            self.name = self._get_string_from_type(card_type)
-            self.value = self._get_value_from_type(card_type)
-            self.type = card_type
+    card_types = {
+            "A": 1,
+            "2": 2,
+            "3": 3,
+            "4": 4,
+            "5": 5,
+            "6": 6,
+            "7": 7,
+            "8": 8,
+            "9": 9,
+            "10": 10,
+            "J": 10,
+            "Q": 10,
+            "K": 10
+    }
+    def __init__(self, card_type):
+        self.value = self.card_types[card_type]
+        self.type = card_type
 
-  def to_string(self):
-      return self.name
-
-  @staticmethod
-  def type(str_value):
-      return Card.card_types[str_value]
-
-  def _get_string_from_type(self, card_type):
-            if card_type == self.card_types["ACE"]:
-                return "Ace"
-            elif card_type == self.card_types["TWO"]:
-                return "Two"
-            elif card_type == self.card_types["THREE"]:
-                return "Three"
-            elif card_type == self.card_types["FOUR"]:
-                return "Four"
-            elif card_type == self.card_types["FIVE"]:
-                return "Five"
-            elif card_type == self.card_types["SIX"]:
-                return "Six"
-            elif card_type == self.card_types["SEVEN"]:
-                return "Seven"
-            elif card_type == self.card_types["EIGHT"]:
-                return "Eight"
-            elif card_type == self.card_types["NINE"]:
-                return "Nine"
-            elif card_type == self.card_types["TEN"]:
-                return "Ten"
-
-  def _get_value_from_type(self, card_type):
-            if card_type == self.card_types["ACE"]:
-                return 1
-            elif card_type == self.card_types["TWO"]:
-                return 2
-            elif card_type == self.card_types["THREE"]:
-                return 3
-            elif card_type == self.card_types["FOUR"]:
-                return 4
-            elif card_type == self.card_types["FIVE"]:
-                return 5
-            elif card_type == self.card_types["SIX"]:
-                return 6
-            elif card_type == self.card_types["SEVEN"]:
-                return 7
-            elif card_type == self.card_types["EIGHT"]:
-                return 8
-            elif card_type == self.card_types["NINE"]:
-                return 9
-            elif card_type == self.card_types["TEN"]:
-                return 10
+    def __str__(self):
+        return self.type
 
 class Deck:
     num_decks = 0
     card_count = {}
     cards_left = 0
-    card_types = [
-        Card.type("TWO"),
-        Card.type("THREE"),
-        Card.type("FOUR"),
-        Card.type("FIVE"),
-        Card.type("SIX"),
-        Card.type("SEVEN"),
-        Card.type("EIGHT"),
-        Card.type("NINE"),
-        Card.type("TEN"),
-        Card.type("ACE")
-    ]
 
     def __init__(self, num_decks):
         self.num_decks = num_decks
-        self.shuffle(num_decks)
+        self.cards_left = 52*self.num_decks
+
+        for k in Card.card_types.iterkeys():
+            self.card_count[k] = 4*self.num_decks
 
     def deal_card(self):
         if self.is_empty():
@@ -98,7 +43,7 @@ class Deck:
         else:
             while True:
                 index = self.random_index()
-                card_type = self.card_types[index]
+                card_type = [i for i in Card.card_types.iterkeys()][index]
 
                 if (self.card_count[card_type] != 0):
                     self.card_count[card_type] -= 1
@@ -114,22 +59,7 @@ class Deck:
         return self.cards_left == 0
 
     def random_index(self):
-        return int(math.floor(random.random()*len(self.card_types)))
-
-    def shuffle(self, mult):
-        self.card_count = {
-            Card.type("TWO"): 4*mult,
-            Card.type("THREE"): 4*mult,
-            Card.type("FOUR"): 4*mult,
-            Card.type("FIVE"): 4*mult,
-            Card.type("SIX"): 4*mult,
-            Card.type("SEVEN"): 4*mult,
-            Card.type("EIGHT"): 4*mult,
-            Card.type("NINE"): 4*mult,
-            Card.type("TEN"): 16*mult,
-            Card.type("ACE"): 4*mult
-        }
-        self.cards_left = 52*mult
+        return int(math.floor(random.random()*len(Card.card_types)))
 
 class Hand:
     def __init__(self):
@@ -153,7 +83,7 @@ class Hand:
 
     def has_aces(self):
         for card in self.cards:
-            if card.type == Card.type("ACE"):
+            if card.type == "A":
                 return True
         return False
 
@@ -259,7 +189,8 @@ class Logger:
 class Game:
     round_outcomes = {
         "WIN": 0,
-        "LOSE": 1
+        "LOSE": 1,
+        "PUSH": 2
     }
 
     def __init__(self):
@@ -281,16 +212,19 @@ class Game:
     def get_round_outcome(self):
         if self.player.is_bust():
             outcome = Game.round_outcomes["LOSE"]
-        elif self.dealer.is_bust():
-            outcome = Game.round_outcomes["WIN"]
         else:
-            player_score = self.player.get_max_score()
-            dealer_score = self.player.get_max_score()
-
-            if player_score > dealer_score:
+            if self.dealer.is_bust():
                 outcome = Game.round_outcomes["WIN"]
             else:
-                outcome = Game.round_outcomes["LOSE"]
+                player_score = self.player.get_max_score()
+                dealer_score = self.dealer.get_max_score()
+
+                if player_score > dealer_score:
+                    outcome = Game.round_outcomes["WIN"]
+                elif player_score < dealer_score:
+                    outcome = Game.round_outcomes["LOSE"]
+                else:
+                    outcome = Game.round_outcomes["PUSH"]
 
         return outcome
 
@@ -298,7 +232,6 @@ class Game:
         return self.deck.get_cards_left() < 2*len(self.players)
 
     def play(self):
-        round_num = 1
         while not self.is_game_over():
             self.deal_cards()
 
@@ -314,10 +247,19 @@ class Game:
                         Logger.emit(max_score, min_score, dealer_card, player_move)
 
                     if player_move == Player.move("HIT"):
-                        p.deal(self.deck.deal_card())
+                        dealt_card = self.deck.deal_card()
+                        if dealt_card is not None:
+                            p.deal(dealt_card)
+                        else:
+                            break
+
+                # Player busts, end round early.
+                if p.is_bust() and not isinstance(p, Dealer):
+                    break
 
             outcome = self.get_round_outcome()
-            Logger.log_round(outcome)
+            if outcome is not Game.round_outcome("PUSH"):
+                Logger.log_round(outcome)
 
             #Round over, clear hands
             for p in self.players:
